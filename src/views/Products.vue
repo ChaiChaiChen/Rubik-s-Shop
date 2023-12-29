@@ -47,11 +47,15 @@
     @update-product="updateProduct"
   ></ProductModal>
   <DelModal ref="delProductModal" :item="tempProduct" @del-product="delProduct"></DelModal>
+  <ToastMessages></ToastMessages>
+  <Pagination :pages="pagination" @emit-pages="getProducts"></Pagination>
 </template>
 
 <script>
 import ProductModal from '@/components/ProductModal.vue';
 import DelModal from '@/components/DelModal.vue';
+import ToastMessages from '@/components/ToastMessages.vue';
+import Pagination from '@/components/Pagination.vue';
 
 export default {
   data() {
@@ -65,12 +69,16 @@ export default {
   components: {
     ProductModal,
     DelModal,
+    ToastMessages,
+    Pagination,
   },
+  inject: ['emitter'],
   methods: {
-    getProducts() {
-      const api = `${process.env.VUE_APP_API}api/${process.env.VUE_APP_PATH}/admin/products`;
+    getProducts(page) {
+      const api = `${process.env.VUE_APP_API}api/${process.env.VUE_APP_PATH}/admin/products/?page=${page}`;
       this.$http.get(api, this.user).then((res) => {
         this.products = res.data.products;
+        this.pagination = res.data.pagination;
       });
     },
     openModal(isNew, item) {
@@ -95,9 +103,20 @@ export default {
       }
       const productComponent = this.$refs.productModal;
       this.$http[httpMethod](api, { data: this.tempProduct }).then((res) => {
-        console.log(res);
         productComponent.hideModal();
-        this.getProducts();
+        if (res.data.success) {
+          this.getProducts();
+          this.emitter.emit('push-message', {
+            style: 'success',
+            title: '新增成功',
+          });
+        } else {
+          this.emitter.emit('push-message', {
+            style: 'danger',
+            title: '新增失敗',
+            content: res.data.message.join('、'),
+          });
+        }
       });
     },
     openDelModal(item) {
@@ -111,7 +130,19 @@ export default {
         console.log('success', res);
         const delProductComponent = this.$refs.delProductModal;
         delProductComponent.hideModal();
-        this.getProducts();
+        if (res.data.success) {
+          this.getProducts();
+          this.emitter.emit('push-message', {
+            style: 'success',
+            title: '刪除成功',
+          });
+        } else {
+          this.emitter.emit('push-message', {
+            style: 'danger',
+            title: '刪除失敗',
+            content: res.data.message.join('、'),
+          });
+        }
       });
     },
   },

@@ -33,7 +33,7 @@
                   class="form-control"
                   id="image"
                   placeholder="請輸入圖片連結"
-                  v-model="tempProduct.image"
+                  v-model="tempProduct.imageUrl"
                 />
               </div>
               <div class="mb-3">
@@ -41,9 +41,15 @@
                   >或 上傳圖片
                   <i class="fas fa-spinner fa-spin"></i>
                 </label>
-                <input type="file" id="customFile" class="form-control" />
+                <input
+                  type="file"
+                  id="customFile"
+                  class="form-control"
+                  ref="fileInput"
+                  @change="uploadFile"
+                />
               </div>
-              <img class="img-fluid" alt="" />
+              <img class="img-fluid" alt="" :src="tempProduct.imageUrl" />
             </div>
             <div class="col-sm-8">
               <div class="mb-3">
@@ -141,9 +147,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-            取消
-          </button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
           <button
             type="button"
             class="btn btn-primary"
@@ -157,7 +161,7 @@
   </div>
 </template>
 <script>
-import Modal from 'bootstrap/js/dist/modal';
+import modalMixins from '../minxins/modalMixins.vue';
 
 export default {
   props: {
@@ -168,6 +172,7 @@ export default {
       },
     },
   },
+  mixins: [modalMixins],
   //   監聽Products所傳入的資料是否有變動
   watch: {
     product() {
@@ -182,16 +187,18 @@ export default {
     };
   },
   methods: {
-    showModal() {
-      this.modal.show();
+    uploadFile() {
+      const uploadedFile = this.$refs.fileInput.files[0];
+      //   轉為formdata格式
+      const formData = new FormData();
+      formData.append('file-to-upload', uploadedFile);
+      const url = `${process.env.VUE_APP_API}api/${process.env.VUE_APP_PATH}/admin/upload`;
+      this.$http.post(url, formData).then((res) => {
+        if (res.data.success) {
+          this.tempProduct.imageUrl = res.data.imageUrl;
+        }
+      });
     },
-    hideModal() {
-      this.modal.hide();
-    },
-  },
-  mounted() {
-    // 將modal實體化，將實體指向外層的 ref="modal"
-    this.modal = new Modal(this.$refs.modal);
   },
 };
 </script>

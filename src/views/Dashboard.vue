@@ -1,7 +1,7 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <Navbar></Navbar>
-  <div class="container-fluid">
+  <div class="container-fluid mt-4">
     <router-view />
   </div>
 </template>
